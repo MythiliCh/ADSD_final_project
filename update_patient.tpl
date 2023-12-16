@@ -1,24 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Patient Details</title>
+    <title>Update Patient</title>
 </head>
 <body>
-    <h1>Update Patient Details</h1>
-
-    <form action="/patients/update/{{ patient.patient_id }}" method="post">
-
+    <h1>Update Patient</h1>
+    <form action="/patients/update/{{item['patient_id']}}" method="post">
         <label for="patient_name">Patient Name:</label>
-        <input type="text" id="patient_name" name="patient_name" value="{{ patient.patient_name }}" required>
+        <input type="text" id="patient_name" name="patient_name" value="{{item['patient_name']}}" required><br>
 
         <label for="disease">Disease:</label>
-        <input type="text" id="disease" name="disease" value="{{ patient.disease }}" required>
+        <input type="text" id="disease" name="disease" value="{{item['disease']}}" required><br>
 
-        <button type="submit">Update Patient</button>
+        <input type="submit" value="Update Patient">
     </form>
-
+    <hr/>
     <a href="/patients">Back to Patients</a>
 </body>
 </html>
