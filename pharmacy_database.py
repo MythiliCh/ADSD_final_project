@@ -1,83 +1,85 @@
-# pharmacy_database.py
-
 import sqlite3
-from bottle import Bottle, route, run, template, request, redirect
 
-connection = sqlite3.connect("pharmacy.db")
+# Connect to the SQLite database
+connection = sqlite3.connect('pharmacy.db')
+cursor = connection.cursor()
 
-app = Bottle()
 
-@app.route('/patients')
-def get_patients():
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM patients")
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS patients (
+        patient_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_name TEXT NOT NULL,
+        disease TEXT NOT NULL
+    )
+''')
+
+#
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS medicines (
+        medicine_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        medicine_name TEXT NOT NULL
+    )
+''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS patient_meds (
+        patient_id INTEGER,
+        medicine_id INTEGER, 
+        FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+        FOREIGN KEY (medicine_id) REFERENCES medicines(medicine_id)
+    )
+''')
+
+connection.commit()
+
+
+def get_patients(patient_id=None):
+    if patient_id is not None:
+        cursor.execute("SELECT * FROM patients WHERE patient_id=?", (patient_id,))
+    else:
+        cursor.execute("SELECT * FROM patients")
+
     rows = cursor.fetchall()
     patients = [{'patient_id': row[0], 'patient_name': row[1], 'disease': row[2]} for row in rows]
-    print(patients)
-    return template('patients', patients=patients)
+    return patients
 
-@app.route('/medicines')
+
+
 def get_medicines():
-    cursor = connection.cursor()
-    search_term = request.query.get('search', '').strip()
-    
-    if search_term:
-        rows = cursor.execute("SELECT * FROM medicines WHERE medicine_name LIKE ?", (f"%{search_term}%",))
-    else:
-        rows = cursor.execute("SELECT * FROM medicines")
+    cursor.execute("SELECT * FROM medicines")
+    rows = cursor.fetchall()
+    medicines = [{'medicine_id': row[0], 'medicine_name': row[1]} for row in rows]
+    return medicines
 
-    medicines = [{'medicine_id': row[0], 'medicine_name': row[1]} for row in rows.fetchall()]
-    return template('medicines', medicines=medicines, search_term=search_term)
-
-@app.route('/patient_meds/<patient_id:int>')
 def get_patient_meds(patient_id):
-    cursor = connection.cursor()
-    rows = cursor.execute("SELECT * FROM patient_meds WHERE patient_id = ?", (patient_id,))
-    patient_meds = [{'patient_id': row[0], 'medicine_id': row[1]} for row in rows.fetchall()]
-    return template('patient_meds', patient_id=patient_id, patient_meds=patient_meds)
+    cursor.execute("SELECT medicine_id FROM patient_meds WHERE patient_id=?", (patient_id,))
+    rows = cursor.fetchall()
+    medicine_ids = [row[0] for row in rows]
+    
+    medicines = []
+    for medicine_id in medicine_ids:
+        cursor.execute("SELECT * FROM medicines WHERE medicine_id=?", (medicine_id,))
+        row = cursor.fetchone()
+        medicines.append({'medicine_id': row[0], 'medicine_name': row[1]})
+    
+    return medicines
 
-@app.route('/add_patient')
-def add_patient():
-    return template('add_patient')
-
-
-
-@app.route('/add_patient_med')
-def add_patient_med():
-    patients = connection.execute("SELECT * FROM patients").fetchall()
-    medicines = connection.execute("SELECT * FROM medicines").fetchall()
-    return template('add_patient_med', patients=patients, medicines=medicines)
-
-
-# Initialize the database
-def initialize_database():
-    cursor = connection.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS patients (
-            patient_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            patient_name TEXT NOT NULL,
-            disease TEXT NOT NULL
-        )
-    ''')
-
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS medicines (
-            medicine_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            medicine_name TEXT NOT NULL
-        )
-    ''')
-
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS patient_meds (
-            patient_id INTEGER,
-            medicine_id INTEGER, 
-            FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
-            FOREIGN KEY (medicine_id) REFERENCES medicines(medicine_id)
-        )
-    ''')
-
+def add_patient(patient_name, disease):
+    cursor.execute("INSERT INTO patients (patient_name, disease) VALUES (?, ?)", (patient_name, disease))
     connection.commit()
 
-if __name__ == "__main__":
-    initialize_database()
-    app.run(host='localhost', port=8080, debug=True)
+def add_medicine(medicine_name):
+    cursor.execute("INSERT INTO medicines (medicine_name) VALUES (?)", (medicine_name,))
+    connection.commit()
+
+def add_patient_med(patient_id, medicine_id):
+    cursor.execute("INSERT INTO patient_meds (patient_id, medicine_id) VALUES (?, ?)", (patient_id, medicine_id))
+    connection.commit()
+
+def update_patient(patient_id, patient_name, disease):
+    cursor.execute("UPDATE patients SET patient_name=?, disease=? WHERE patient_id=?", (patient_name, disease, patient_id))
+    connection.commit()
+
+def delete_patient(patient_id):
+    cursor.execute("DELETE FROM patients WHERE patient_id=?", (patient_id,))
+    connection.commit()
