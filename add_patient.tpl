@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New patients</title>
+    <title>Add Patient</title>
 </head>
 <body>
-    <h1>patients</h1>
-
     <h1>Add Patient</h1>
-    <form>
-        Patient Name: <input type="text" name="patient_name" required>
-        Disease: <input type="text" name="disease" required>
-        <input type="submit" value="Add Patent">
+    <form action="/add_patient" method="post">
+        <label for="patient_name">Patient Name:</label>
+        <input type="text" id="patient_name" name="patient_name" required><br>
+
+        <label for="disease">Disease:</label>
+        <input type="text" id="disease" name="disease" required><br>
+
+        <input type="submit" value="Add Patient">
     </form>
-    
+    <hr/>
+    <a href="/patients">Back to Patients</a>
 </body>
 </html>
-
