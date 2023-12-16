@@ -1,33 +1,34 @@
+
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medicines</title>
 </head>
 <body>
     <h1>Medicines</h1>
 
     <form action="/medicines" method="get">
-        <input type="text" name="search_term" placeholder="Search Medicines">
-        <button type="submit">Search</button>
+        Search: <input type="text" name="search" value="{{search_term}}">
+        <input type="submit" value="Search">
     </form>
 
+    <hr></hr>
     <table border="1">
-    <tr>
-    <th>ID</th>
-    <th>Patient Name</th>
-    <th>Disease</th>
-    <th>Prescribed_medicine</th>
-    </tr>
-    % for patient in patients:
-    <tr>
-    <td>{{str(patient.patient_id)}}</td>
-    <td>{{str(patient.patient_name)}}</td>
-    <td>{{str(patient.disease)}}</td>>
-    <td><a href="/patient_med/{{str(patient.patient_id)}}">Click for your Medicine</a></td>
-    </tr>
-
-
+        <tr>
+            <th>ID</th>
+            <th>Medicine Name</th>
+        </tr>
+        % for item in medicines:
+            <tr>
+                <td>{{str(item['medicine_id'])}}</td>
+                <td>{{item['medicine_name']}}</td>
+            </tr>
+        % end
+    </table>
+    <hr/>
+<a href="add_medicine">Add new Medicine</a>
+<hr/>
 </body>
 </html>
+
