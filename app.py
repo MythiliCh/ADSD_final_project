@@ -8,13 +8,18 @@ def get_index():
 @route("/patients")
 def get_patients():
     items = pharmacy_database.get_patients()
-    search_term = request.forms.get('search_term')
+    search_term = request.query.get('search', '').strip()
     return template('patients', patients=items, search_term=search_term)
+
+
 
 @route("/patient_meds/<patient_id:int>")
 def get_patient_meds(patient_id):
-    items = pharmacy_database.get_patient_meds(patient_id)
-    return template('patient_meds', patient_id=patient_id, patient_meds=items)
+    patient_meds = pharmacy_database.get_patient_meds(patient_id)
+    patient_info = pharmacy_database.get_patients(patient_id)
+    return template('patient_meds', patient_id=patient_id, patient_info=patient_info[0], patient_meds=patient_meds)
+
+
 
 @route("/add_patient")
 def add_patient():
@@ -30,8 +35,20 @@ def post_add_patient():
 @route("/medicines")
 def get_medicines():
     items = pharmacy_database.get_medicines()
-    search_term = request.forms.get('search_term')
+    search_term = request.query.get('search', '').strip()
     return template('medicines', medicines=items, search_term=search_term)
+
+
+
+@route("/add_medicine")
+def add_medicine():
+    return template('add_medicine')
+
+@post("/add_medicine")
+def post_add_medicine():
+    medicine_name = request.forms.get("medicine_name")
+    pharmacy_database.add_medicine(medicine_name)
+    redirect("/medicines")
 
 
 
@@ -48,10 +65,13 @@ def post_add_patient_med():
     pharmacy_database.add_patient_med(patient_id, medicine_id)
     redirect(f"/patient_meds/{patient_id}")
 
+
+
 @route("/patients/update/<patient_id>")
 def get_update_patient(patient_id):
     items = pharmacy_database.get_patients(patient_id)
     return template("update_patient.tpl", item=items[0])
+
 
 @post("/patients/update/<patient_id>")
 def post_update_patient(patient_id):
@@ -65,16 +85,9 @@ def get_delete_patient(patient_id):
     pharmacy_database.delete_patient(patient_id)
     redirect("/patients")
 
-run(host='localhost', port=8090)
+@route("/static/<filename:path>")
+def static(filename):
+    return bottle.static_file(filename, root='./static')
 
-
-# @post("/add_medicine")
-# def post_add_medicine():
-#     medicine_name = request.forms.get("medicine_name")
-#     pharmacy_database.add_medicine(medicine_name)
-#     redirect("/medicines")
-#@route("/add_medicine")
-# def add_medicine():
-#     return template('add_medicine')
-
+run(host='localhost', port=8090, debug=True)
 
